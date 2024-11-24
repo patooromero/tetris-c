@@ -72,32 +72,31 @@ int main(void) {
     int puntos = 0, nivel = 0, tic = 0;
 
     while (!WindowShouldClose()) {
-        // Entrada del usuario
+        //cond 
         esValido = 1;
         if ((IsKeyDown(KEY_LEFT) && IsKeyDown(KEY_DOWN)) || (IsKeyDown(KEY_RIGHT) && IsKeyDown(KEY_DOWN))) {
             esValido = 0; 
         }
+        // Entrada del usuario
         Pieza copia = actual;
-        
         if (IsKeyPressed(KEY_DOWN)&esValido) actual.orig.y++;
         if (IsKeyPressed(KEY_UP)) RotarDerecha(&actual);
         if (IsKeyPressed(KEY_LEFT) & esValido) {
-            Pieza copia = actual;  // Crear una copia de la pieza
-            copia.orig.x--;        // Mover la copia a la izquierda
-            if (!VerificarColision(tablero, &copia)) {
-                actual = copia;    // Solo actualizar si no hay colisión
+            Pieza copia = actual;  // Crear una copia
+            copia.orig.x--;        // Accion
+            if (!VerificarColision(tablero, &copia)) { 
+                actual = copia;    //verifica y aplica la colision
             }
         }
         if (IsKeyPressed(KEY_RIGHT) & esValido) {
-            Pieza copia = actual;  // Crear una copia de la pieza
-            copia.orig.x++;        // Mover la copia a la derecha
+            Pieza copia = actual;  // lo mismo aca
+            copia.orig.x++;       
             if (!VerificarColision(tablero, &copia)) {
-                actual = copia;    // Solo actualizar si no hay colisión
+                actual = copia;   
             }
         }
 
-        
-       
+        //avanza automaticamente
         int intervaloCaida = 30 - nivel * 2; // Reduce el intervalo a medida que sube el nivel
         if (intervaloCaida < 5) intervaloCaida = 5; // Establece un límite mínimo
 
@@ -112,21 +111,22 @@ int main(void) {
             if (tic % intervaloCaida == 0) { // Si colisiona al caer automáticamente
                 IncrustarPieza(tablero, &actual);
                 int filasEliminadas = EliminarFilas(tablero);
-                puntos += filasEliminadas * filasEliminadas; // Puntuación basada en filas eliminadas
+                puntos += filasEliminadas * filasEliminadas; // Actualizar puntuación
                 if (puntos >= (nivel + 1) * 30) nivel++;
 
-                // Generar nueva pieza
+                // Cambiar pieza actual por la siguiente
                 actual = siguiente;
-                GenerarNuevaPieza(&siguiente);
-                actual.orig.x = COLUMNAS / 2 - 1;
+                GenerarNuevaPieza(&siguiente); // Generar la próxima pieza
+                actual.orig.x = COLUMNAS / 2 - 1; // Centrar pieza en el tablero
 
-                // Verificar si la nueva pieza colisiona al generarse (Game Over)
+                // Verificar colisión inicial (Game Over)
                 if (VerificarColision(tablero, &actual)) {
                     MostrarGameOver();
                     break;
                 }
             }
         }
+
 
 
         // Dibujar
@@ -219,14 +219,20 @@ void RotarDerecha(Pieza *pieza) {
 }
 
 void GenerarNuevaPieza(Pieza *pieza) {
-    pieza->orig.x = COLUMNAS / 2; //COLUMNAS / 2
-    pieza->orig.y = 0; //0
-    pieza->color = GetRandomValue(1, 6) * 40; // Color aleatorio
+    // Centrar la pieza en el tablero
+    pieza->orig.x = COLUMNAS / 2 - 1; // Centrar horizontalmente
+    pieza->orig.y = 0;               // Aparecer en la fila superior
+
+    // Asignar un color aleatorio
+    pieza->color = GetRandomValue(1, 6) * 40;
+
+    // Seleccionar una forma aleatoria
     int tipo = GetRandomValue(0, 6);
     for (int i = 0; i < 3; i++) {
         pieza->perif[i] = formas[tipo][i];
     }
 }
+
 
 bool FilaLlena(const Tablero tablero, int fila) {
     for (int x = 0; x < COLUMNAS; x++) {
@@ -264,12 +270,24 @@ int EliminarFilas(Tablero tablero) {
 
 
 void MostrarHUD(int puntos, int nivel, const Pieza *siguiente) {
-    DrawRectangle(ANCHO, 0, HUD_ANCHO, ALTO, GRAY);    
+    DrawRectangle(ANCHO, 0, HUD_ANCHO, ALTO, GRAY); //contenedor del HUD
     DrawText("TETRIS", ANCHO + 20, 20, 20, WHITE);
-    DrawText(TextFormat("Puntos: %d", puntos), ANCHO + 20, 60, 20, WHITE);
+
+    DrawText(TextFormat("Puntos: %d", puntos), ANCHO + 20, 60, 20, WHITE); //puntos y nivel
     DrawText(TextFormat("Nivel: %d", nivel + 1), ANCHO + 20, 100, 20, WHITE);
+
+    // Siguiente:
     DrawText("Siguiente:", ANCHO + 20, 140, 20, WHITE);
-    DibujarPieza(siguiente);
+    DrawRectangle(ANCHO + 20, 160, 100, 100, BLACK); // Fondo negro de la pieza siguiente
+    // Dibujar la siguiente pieza (desplazada hacia el HUD)
+    int offsetX = ((ANCHO + 20) / TAM) + 2; // Conversión para centrar en HUD(1..7)
+    int offsetY = 8;                  // Línea base en el HUD
+    Pieza piezaTemporal = *siguiente;
+
+    // Ajustamos temporalmente la pieza para el HUD
+    piezaTemporal.orig.x = offsetX;
+    piezaTemporal.orig.y = offsetY;
+    DibujarPieza(&piezaTemporal);
 }
 
 void MostrarGameOver() {
