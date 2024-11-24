@@ -1,6 +1,6 @@
 # tetris-c
 "tetris trabajo C LAB"
--Codigo -> "main-dev.c"
+-Codigo -> "main2-dev-2.c"
 -referencia -> tetris.cpp
 
 
