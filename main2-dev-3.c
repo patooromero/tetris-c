@@ -72,6 +72,7 @@ int main(void) {
     // Variables del juego
     Tablero tablero;
     InicializarTablero(tablero);
+    LeerPuntajes("puntajes.txt");
 
     Pieza actual, siguiente;
     GenerarNuevaPieza(&actual);
@@ -298,7 +299,6 @@ void MostrarHUD(int puntos, int nivel, const Pieza *siguiente) {
     //Mostrar puntajes maximos
     DrawText("Puntajes máximos:", ANCHO + 20, 280, 20, WHITE);
     for (int i = 0; i < MAX_PUNTAJES; i++) {
-        LeerPuntajes("puntajes.txt");
         DrawText(TextFormat("%d. %d", i + 1, puntajes[i]), ANCHO + 20, 310 + i * 20, 20, WHITE);
     }
 }
