@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "raylib.h"
 #include <stdlib.h>
 #include <time.h>
@@ -10,6 +11,7 @@
 #define ANCHO (COLUMNAS * TAM)
 #define ALTO (FILAS * TAM)
 #define HUD_ANCHO 220     // Espacio adicional para HUD
+#define MAX_PUNTAJES 5
 
 // Estructuras
 typedef struct {
@@ -41,7 +43,14 @@ int EliminarFilas(Tablero tablero);
 void MostrarHUD(int puntos, int nivel, const Pieza *siguiente);
 void MostrarGameOver();
 
+// Prototipos para manejar puntajes
+void LeerPuntajes(const char *filename);
+void GuardarPuntajes(const char *filename);
+void ActualizarPuntajes(int nuevoPuntaje);
+
+
 int esValido;
+int puntajes[MAX_PUNTAJES] = {0}; // Arreglo para los 5 puntajes más altos
 
 // Piezas predefinidas
 Coord formas[7][3] = {
@@ -120,8 +129,14 @@ int main(void) {
 
                 // Verificar colisión inicial (Game Over)
                 if (VerificarColision(tablero, &actual)) {
-                    MostrarGameOver();
-                    break;
+                    //fix gameover random
+                    if ((&actual.orig.x >= COLUMNAS) & (&actual.orig.y >= FILAS)) { 
+                        MostrarGameOver();
+                        //puntaje
+                        ActualizarPuntajes(puntos);
+                        GuardarPuntajes("puntajes.txt");
+                        break;
+                    }
                 }
             }
         }
@@ -279,6 +294,13 @@ void MostrarHUD(int puntos, int nivel, const Pieza *siguiente) {
     piezaTemporal.orig.x = offsetX;
     piezaTemporal.orig.y = offsetY;
     DibujarPieza(&piezaTemporal);
+    
+    //Mostrar puntajes maximos
+    DrawText("Puntajes máximos:", ANCHO + 20, 280, 20, WHITE);
+    for (int i = 0; i < MAX_PUNTAJES; i++) {
+        LeerPuntajes("puntajes.txt");
+        DrawText(TextFormat("%d. %d", i + 1, puntajes[i]), ANCHO + 20, 310 + i * 20, 20, WHITE);
+    }
 }
 
 void MostrarGameOver() {
@@ -289,3 +311,39 @@ void MostrarGameOver() {
         EndDrawing();
     }
 }
+
+//Puntajes
+void LeerPuntajes(const char *filename) { 
+    FILE *file = fopen(filename, "r");
+    if (file) {
+        for (int i = 0; i < MAX_PUNTAJES; i++) {
+            if (fscanf(file, "%d", &puntajes[i]) != 1) break;
+        }
+        fclose(file);
+    }
+}
+
+void GuardarPuntajes(const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (file) {
+        for (int i = 0; i < MAX_PUNTAJES; i++) {
+            fprintf(file, "%d\n", puntajes[i]);
+        }
+        fclose(file);
+    }
+}
+
+void ActualizarPuntajes(int nuevoPuntaje) {
+    for (int i = 0; i < MAX_PUNTAJES; i++) {
+        if (nuevoPuntaje > puntajes[i]) {
+            // Desplazar puntajes hacia abajo
+            for (int j = MAX_PUNTAJES - 1; j > i; j--) {
+                puntajes[j] = puntajes[j - 1];
+            }
+            puntajes[i] = nuevoPuntaje; // Insertar nuevo puntaje
+            break;
+        }
+    }
+}
+
+
