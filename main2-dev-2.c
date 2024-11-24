@@ -78,11 +78,25 @@ int main(void) {
             esValido = 0; 
         }
         Pieza copia = actual;
+        
         if (IsKeyPressed(KEY_DOWN)&esValido) actual.orig.y++;
-        if (IsKeyPressed(KEY_LEFT)&esValido) actual.orig.x--;
-        if (IsKeyPressed(KEY_RIGHT)&esValido) actual.orig.x++;
         if (IsKeyPressed(KEY_UP)) RotarDerecha(&actual);
-       
+        if (IsKeyPressed(KEY_LEFT) & esValido) {
+            Pieza copia = actual;  // Crear una copia de la pieza
+            copia.orig.x--;        // Mover la copia a la izquierda
+            if (!VerificarColision(tablero, &copia)) {
+                actual = copia;    // Solo actualizar si no hay colisión
+            }
+        }
+        if (IsKeyPressed(KEY_RIGHT) & esValido) {
+            Pieza copia = actual;  // Crear una copia de la pieza
+            copia.orig.x++;        // Mover la copia a la derecha
+            if (!VerificarColision(tablero, &copia)) {
+                actual = copia;    // Solo actualizar si no hay colisión
+            }
+        }
+
+        
        
         int intervaloCaida = 30 - nivel * 2; // Reduce el intervalo a medida que sube el nivel
         if (intervaloCaida < 5) intervaloCaida = 5; // Establece un límite mínimo
@@ -95,24 +109,25 @@ int main(void) {
         // Verificar colisión
         if (VerificarColision(tablero, &actual)) {
             actual = copia; // Revertir movimiento
-           if (IsKeyPressed(KEY_DOWN)) {
+            if (tic % intervaloCaida == 0) { // Si colisiona al caer automáticamente
                 IncrustarPieza(tablero, &actual);
                 int filasEliminadas = EliminarFilas(tablero);
-                puntos += filasEliminadas * filasEliminadas;
+                puntos += filasEliminadas * filasEliminadas; // Puntuación basada en filas eliminadas
                 if (puntos >= (nivel + 1) * 30) nivel++;
 
+                // Generar nueva pieza
                 actual = siguiente;
                 GenerarNuevaPieza(&siguiente);
                 actual.orig.x = COLUMNAS / 2 - 1;
-                
+
+                // Verificar si la nueva pieza colisiona al generarse (Game Over)
                 if (VerificarColision(tablero, &actual)) {
-                    if (&actual.orig.x >= COLUMNAS) {
-                        MostrarGameOver();
-                        break;
-                    }
+                    MostrarGameOver();
+                    break;
                 }
             }
         }
+
 
         // Dibujar
         BeginDrawing();
@@ -161,28 +176,39 @@ void DibujarPieza(const Pieza *pieza) {
 }
 
 void IncrustarPieza(Tablero tablero, const Pieza *pieza) {
+    // Registrar el bloque central
     tablero[pieza->orig.x][pieza->orig.y] = pieza->color;
-    //pieza->orig.x = COLUMNAS / 2;
-    //pieza->orig.y = 0;
-    for (int i = 0; i < 3; i++)
-        tablero[pieza->orig.x + pieza->perif[i].x][pieza->orig.y + pieza->perif[i].y] = pieza->color;
-        
-}
 
-bool VerificarColision(const Tablero tablero, const Pieza *pieza) {
-    if (pieza->orig.x < 0 || pieza->orig.x == COLUMNAS || pieza->orig.y == FILAS)
-        return true;
-    if (tablero[pieza->orig.x][pieza->orig.y] != 0)
-        return true;
-
+    // Registrar los bloques periféricos
     for (int i = 0; i < 3; i++) {
         int x = pieza->orig.x + pieza->perif[i].x;
         int y = pieza->orig.y + pieza->perif[i].y;
-        if (x < 0 || x == COLUMNAS || y == FILAS || tablero[x][y] != 0)
+        tablero[x][y] = pieza->color;
+    }
+}
+
+
+bool VerificarColision(const Tablero tablero, const Pieza *pieza) {
+    // Verificar el bloque central
+    if (pieza->orig.x < 0 || pieza->orig.x >= COLUMNAS || pieza->orig.y >= FILAS)
+        return true;
+    if (pieza->orig.y >= 0 && tablero[pieza->orig.x][pieza->orig.y] != 0)
+        return true;
+
+    // Verificar los bloques periféricos
+    for (int i = 0; i < 3; i++) {
+        int x = pieza->orig.x + pieza->perif[i].x;
+        int y = pieza->orig.y + pieza->perif[i].y;
+        if (x < 0 || x >= COLUMNAS || y >= FILAS)
+            return true;
+        if (y >= 0 && tablero[x][y] != 0) // Colisión con pieza existente
             return true;
     }
-    return false;
+
+    return false; // No hay colisión
 }
+
+
 
 void RotarDerecha(Pieza *pieza) {
     for (int i = 0; i < 3; i++) {
