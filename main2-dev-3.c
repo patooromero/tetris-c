@@ -48,7 +48,6 @@ void LeerPuntajes(const char *filename);
 void GuardarPuntajes(const char *filename);
 void ActualizarPuntajes(int nuevoPuntaje);
 
-
 int esValido;
 int puntajes[MAX_PUNTAJES] = {0}; // Arreglo para los 5 puntajes más altos
 
@@ -151,7 +150,6 @@ int main(void) {
             MostrarHUD(puntos, nivel, &siguiente);
         
         EndDrawing();
- 
         tic++;
     }
 
