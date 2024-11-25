@@ -1,0 +1,17 @@
+TETRIS EN C
+-Flechas. derecha e izquierda
+	. arriba: rota la pieza
+	. abajo: baja mas rapido
+
+-Se reflejan en Puntaje Maximo los 5 mayores puntajes,
+si no llega al puntaje dentro de los 5 mejores no se graba
+
+-Unica forma de terminar es llegando al GAME OVER. (llegando al tope de la tabla)
+
+#CREDITOS
+-Aguirre Hernan
+-Ughelli Carlos
+-Romero Patricio
+-Suarez Mauro
+
+				/*(o_o)*\
